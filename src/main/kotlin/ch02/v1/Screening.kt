@@ -6,17 +6,17 @@ class Screening(
     private val whenScreened: Long
 ) {
 
-    fun getStartTime() = whenScreened
-
-    fun isSequence(sequence: Int) = this.sequence == sequence
-
-    fun getMovieFee() = movie.getFee()
-
     fun calculateFee(audienceCount: Int): Money {
-        return movie.calculateMovieFee(this).times(audienceCount)
+        return movie.calculateMovieFee(this) * (audienceCount)
     }
 
     fun reserve(customer: Customer, audienceCount: Int): Reservation {
         return Reservation(customer, this, calculateFee(audienceCount), audienceCount)
     }
+
+    fun getStartTime() = whenScreened
+
+    fun isSequence(sequence: Int) = this.sequence == sequence
+
+    fun getMovieFee() = movie.getFee()
 }

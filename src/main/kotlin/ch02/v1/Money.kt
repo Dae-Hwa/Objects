@@ -30,6 +30,10 @@ class Money(
         return Money(this.amount * BigDecimal.valueOf(percent))
     }
 
+    operator fun times(percent: Int): Money {
+        return Money(this.amount * BigDecimal.valueOf(percent.toLong()))
+    }
+
     fun isLessThan(other: Money): Boolean {
         return amount < other.amount
     }
