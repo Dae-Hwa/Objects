@@ -1,9 +1,11 @@
 package ch02.v2
 
+import java.time.LocalDateTime
+
 class Screening(
     private val movie: Movie,
     private val sequence: Int,
-    private val whenScreened: Long
+    private val whenScreened: LocalDateTime
 ) {
 
     fun calculateFee(audienceCount: Int): Money {

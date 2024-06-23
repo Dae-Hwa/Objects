@@ -159,3 +159,62 @@ Screening은 Movie 안에 calculateFee 메소드가 존재하고 있는지도 �
 
 메세지를 수신받은 Movie는 적절한 메서드를 선택한다. 방법을 선택하는 것은 Movie 스스로의 문제다. 메세지를 처리하는 방법을 자율적으로 결정할 수 있는 이유다.
 > 동적 타입 언어에서는 다른 시그니처를 가진 메소드를 이용해 해당 메세지에 응답할 수 있다고 한다.
+
+## 할인 요금 구하기(v2)
+
+> 여기부턴 클래스 설계가 아닌 구현 영역?
+
+### 할인 요금 계산을 위한 협력 시작하기
+
+### 할인 정책과 할인 조건
+
+### 할인 정책 구성하기
+
+```kotlin
+val avatar = Movie(
+    "아바타",
+    Duration.ofMinutes(120),
+    Money.wons(10000),
+    AmountDiscountPolicy(
+        Money.wons(800),
+        SequenceCondition(1),
+        SequenceCondition(10),
+        PeriodCondition(
+            DayOfWeek.MONDAY,
+            LocalTime.of(10, 0),
+            LocalTime.of(11, 59)
+        ),
+        PeriodCondition(
+            DayOfWeek.TUESDAY,
+            LocalTime.of(10, 0),
+            LocalTime.of(20, 59)
+        )
+    )
+)
+```
+
+```kotlin
+val titanic = Movie(
+    "타이타닉",
+    Duration.ofMinutes(180),
+    Money.wons(11000),
+    PercentDiscountPolicy(
+        0.1,
+        PeriodCondition(
+            DayOfWeek.TUESDAY,
+            LocalTime.of(14, 0),
+            LocalTime.of(16, 59)
+        ),
+        SequenceCondition(2),
+        PeriodCondition(
+            DayOfWeek.THURSDAY,
+            LocalTime.of(10, 0),
+            LocalTime.of(13, 59)
+        )
+    )
+)
+```
+
+생성자에 필요한 정보를 전달하도록 강제하면 올바른 상태를 가진 객체 생성을 보장할 수 있다.
+
+[//]: # (TODO: 영화 표 이미지 추가)
