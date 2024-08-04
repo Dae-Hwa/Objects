@@ -1,12 +1,12 @@
 package ch02.v5
 
-import ch02.v2.DiscountCondition
-import ch02.v2.Money
-import ch02.v2.Screening
+import ch02.v1.DiscountCondition
+import ch02.v1.Money
+import ch02.v1.Screening
 
 abstract class DefaultDiscountPolicy(
     private val conditions: List<DiscountCondition>
-): DiscountPolicy {
+) : DiscountPolicy {
 
     override fun calculateDiscountAmount(screening: Screening): Money {
         conditions.forEach {

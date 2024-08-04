@@ -1,9 +1,11 @@
 package ch02.v4
 
-import java.time.DayOfWeek
+import ch02.v1.Customer
+import ch02.v1.Money
+import ch02.v1.Movie
+import ch02.v1.Screening
 import java.time.Duration
 import java.time.LocalDateTime
-import java.time.LocalTime
 
 class Example {
 

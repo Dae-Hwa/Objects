@@ -1,7 +1,7 @@
 package ch02.v5
 
-import ch02.v2.Money
-import ch02.v2.Screening
+import ch02.v1.Money
+import ch02.v1.Screening
 
 /**
  * 기존 DiscountPolicy를 DefaultDiscountPolicy로 변경하고 상위에 DiscountPolicy 인터페이스를 만들어 상속받을 수 있도록 했다.

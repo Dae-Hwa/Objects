@@ -1,8 +1,8 @@
 package ch02.v4
 
-import ch02.v2.DiscountPolicy
-import ch02.v2.Money
-import ch02.v2.Screening
+import ch02.v1.DiscountPolicy
+import ch02.v1.Money
+import ch02.v1.Screening
 
 /**
  * 0원이라는 할인 요금을 계산할 책임을 DiscountPolicy 계층에 위임한다.
