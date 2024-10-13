@@ -169,6 +169,8 @@ Reservation을 잘 알고 있는건 Screening. 예매 정보 생성에 필요한
 
 ## v03. 구현을 통한 검증
 
+### DiscountCondition 개선하기
+
 문제점 변경의 이유가 여러가지 -> 변경에 취약한 클래스
 
 1. 새로운 할인 조건 추가
@@ -179,4 +181,256 @@ Reservation을 잘 알고 있는건 Screening. 예매 정보 생성에 필요한
    - isSatisfiedByPeriod 메서드 내부 구현 수정 필요. 판단 조건 바뀌면 dayOfWeek, startTime, endTime 속성 변경 필요
 
 하나 이상의 변경 이유를 가지면 응집도가 낮음. 변경의 이유에 따라 클래스 분리 필요
+
+isSatisfiedBySequence, isSatisfiedByPeriod 메서드는 서로 다른 이유로 변경됨. 또한 변경 시점도 서로 다를 수 있음
+
+설계 개선할때 변경의 이유가 하나가 넘는 클래스를 찾는 것 부터 시작
+
+변경의 이유 찾는 방법
+1. 인스턴스 변수가 초기화되는 시점이 다른 경우 함께 초기화되는 속성을 기준으로 코드 분리
+2. 메서드들이 인스턴스 변수를 사용하는 방식(혹은 종류)가 다르면 속성 그룹과 해당 그룹에 접근하는 메서드 그룹을 기준으로 코드 분리
+
+#### 클래스 응집도 판단하기
+
+1. 클래스가 하나 이상의 이유로 변경돼야하면 응집도가 낮은 것. 변경의 이유를 기준으로 클래스 분리
+2. 인스턴스 초기화 하는 시점이 다르면 속성을 기준으로 클래스 분리
+3. 메서드 그룹이 속성 그룹을 다르게 사용하면 해당 그룹을 기준으로 클래스 분리
+
+응집도 낮으면 보통 세 가지 문제 같이 가짐
+
+### 타입 분리하기
+
+가장 쉬운 방법은 DiscountCondition 을 독립적인 두 타입을 두 개의 클래스로 분리 하는 것
+
+```kotlin
+class PeriodCondition(
+    private val dayOfWeek: DayOfWeek,
+    private val startTime: LocalTime,
+    private val endTime: LocalTime
+) {
+    fun isSatisfiedBy(screening: Screening): Boolean {
+        return screening.whenScreened.dayOfWeek == dayOfWeek &&
+                startTime <= screening.whenScreened.toLocalTime() &&
+                endTime >= screening.whenScreened.toLocalTime()
+    }
+}
+
+class SequenceCondition(
+   private val sequence: Int
+) {
+    fun isSatisfiedBy(screening: Screening): Boolean {
+        return screening.sequence == sequence
+    }
+}
+```
+
+Movie 인스턴스는 두 개의 서로 다른 클래스의 인스턴스 모두와 협력할 수 있어야 한다.
+
+그래서 Movie 안에서 각 목록을 따로 유지
+
+```kotlin
+class Movie(
+    private val periodConditions: List<PeriodCondition>,
+    private val sequenceConditions: List<SequenceCondition>
+) {
+    private fun isDiscountable(screening: Screening): Boolean {
+       return periodConditions.any { it.isSatisfiedBy(screening) } ||
+               sequenceConditions.any { it.isSatisfiedBy(screening) } 
+    }
+}
+```
+
+그런데 이렇게 하면 Movie 클래스가 두 클래스 모두에 결합된다. 
+
+이전에는 Movie 는 하나의 클래스와 결합되어 있었기 떄문에 결합도가 높아진 것
+
+또한 새로운 할인조건 추가하려면 Movie 클래스에 속성 추가해야함
+
+응집도는 높아졌어도 결합도가 낮아졌음
+
+### 다형성을 통해 분리하기
+
+Movie 입장에서는 두 클래스는 동일한 책임을 가진다. 할인 여부 판단 방법이 다른 것이지, 보내는 메세지는 동일
+
+이러면 역할의 개념 적용. 배역은 DiscountCondition, 배우는 PeriodCondition, SequenceCondition
+
+```kotlin
+interface DiscountCondition {
+    fun isSatisfiedBy(screening: Screening): Boolean
+}
+
+// class PeriodCondition: DiscountCondition {  }
+// class SequenceCondition: DiscountCondition {  }
+
+class Movie(
+    private val discountConditions: List<DiscountCondition>
+) {
+    private fun isDiscountable(screening: Screening): Boolean {
+        return discountConditions.any { it.isSatisfiedBy(screening) }
+    }
+}
+```
+
+객체의 타입에 따라 변하는 행동이 있다면 타입 분리 후 변화하는 행동을 각 타입의 책임으로 할당한다.
+
+이를 Polymorphism(다형성) 패턴이라고 한다.
+
+#### Polymorphism 패턴
+
+객체의 타입에 따라 변하는 로직이 있다면 타입을 명시적으로 정의하고 각 타입에 다형적으로 행동하는 책임 할당
+
+프로그램을 조건문을 사용해서 설계하면 새로운 변화가 일어난 경우 조건 논리를 수정해야 함 -> 수정하기 어렵고 변경에 취약해짐
+
+다형성을 이용하면 새로운 변화를 다루기 쉽게 확장
+
+### 변경으로부터 보호하기
+
+DiscountCondition 의 서브 클래스는 서로 다른 이유로 변경된다. 하지만 Movie 는 이를 알지 못한다. 인터페이스가 존재를 감춰준다.
+
+Movie 의 관점에서 DiscountCondition 의 타입이 캡슐화 된다는 것은 새로운 DiscountCondition 타입을 추가하더라도 Movie 가 영향을 받지 않는 다는 것
+
+변경을 캡슐화 하는 것을 Protected Variations(변경 보호) 패턴이라고 한다.
+
+#### Protected Variations 패턴
+
+책임 할당의 관점에서 캡슐화를 설명하는 것. 변하는 것이 묻엇인지 고려하고 변하는 개념을 캡슐화 하라
+
+변화가 예상되는 불안정한 지점들을 식별하고 그 주위에 안정된 인터페이스를 형성하도록 책임을 할당
+
+변경될 가능성이 높으면 캡슐화
+
+하나의 클래스가 여러 타입의 행동을 구현하고 있으면 다형성 패턴으로 책임 분산
+
+예측 가능한 변경으로 여러 클래스들이 불안정해지면 변경 보호 패턴으로 인터페이스 뒤로 변경을 캡슐화
+
+두 패턴을 적절한 상황에서 조합
+
+
+### Movie 클래스 개선하기
+
+금액 할인 정책 영화와 비율 할인 정책 영화라는 두 가지 타입을 구현하기 때문에 변겨의 이유가 여러가지다. -> 응집도가 낮다.
+
+Polymorphism 패턴을 이용하면 Screening과 Moive가 다형적으로 협력한다. 그러면 Movie의 타입이 늘어나도 Screening에는 영향을 끼치지 않는다.
+
+이러면 Protected Variations 패턴을 적용하여 캡슐화 할 수 있다는 것을 의미
+
+```kotlin
+// Movie의 경우에는 구현을 공유해야하니 추상 클래스로 역할 구현
+abstract class Movie(
+    private val title: String,
+    private val runningTime: Duration,
+    protected val fee: Money,
+    private val discountConditions: List<DiscountCondition>
+) {
+    fun calculateMovieFee(screening: Screening): Money {
+        return if (isDiscountable(screening)) {
+            fee - calculateDiscountAmount()
+        } else {
+            fee
+        }
+    }
+
+    private fun isDiscountable(screening: Screening): Boolean {
+        return discountConditions.any { it.isSatisfiedBy(screening) }
+    }
+
+    protected abstract fun calculateDiscountAmount(): Money
+}
+
+class AmountDiscountMovie(
+    title: String,
+    runningTime: Duration,
+    fee: Money,
+    discountConditions: List<DiscountCondition>,
+    private val discountAmount: Money = Money.ZERO
+): Movie(
+    title,
+    runningTime,
+    fee,
+    discountConditions
+) {
+
+    override fun calculateDiscountAmount() = discountAmount
+}
+
+class PercentDiscountMovie(
+    title: String,
+    runningTime: Duration,
+    fee: Money,
+    discountConditions: List<DiscountCondition>,
+    private val percent: Double = 0.0
+): Movie(
+    title,
+    runningTime,
+    fee,
+    discountConditions
+) {
+    override fun calculateDiscountAmount() = fee * percent
+}
+```
+
+![img_4.png](img_4.png)
+
+이제 모든 클래스 내부 구현은 캡슐화 돼있고, 클리스들은 변경의 이유를 하나씩만 가진다.
+
+각 클래스는 응집도가 높고 느슨하게 결합돼있다. 클래스는 작고 한 가지 일만 수행하고 책임이 적절하게 분배돼있다.
+
+이것이 책임 중심 협력 설계의 이점
+
+데이터 중심 설계는 이와 반대
+
+#### 도메인 구조가 코드의 구조를 이끈다
+
+도메인 모델의 구조와 완성된 클래스 구조가 유사하다.
+
+도메인 모델은 설계 용어 제공을 넘어 코드 구조에도 영향을 미친다.
+
+변경 역시 도메인 모델의 일부다. 도메인 모델에서는 도메인 안에서 변하는 개념과 이들 사이의 관계가 투영돼있어야 한다.
+
+도메인 모델에 변경에 대한 직관이 반영돼있으면 설계에 유연성을 줄 수 있다.
+
+따라서 구현을 가이드할 수 있는 도메인 모델을 선택해야 한다.
+
+### 변경과 유연성
+
+변경에 대비할 수 있는 두 가지 방법
+
+- 코드를 이해하고 수정하기 쉽도록 최대한 단순하게 설계하는 것
+- 코드를 수정하지 않고도 변경을 수용할 수 있도록 코드를 유연하게 만드는 것
+
+대부분의 경우 전자가 더 좋은 방법이지만 유사한 변경이 반복적으로 발생한다면 복잡성 상승을 감수하고 두 번째 방법을 선택하는게 좋다.
+
+새로운 정책이 추가될때마다 해야할게 많으면 번거로울 뿐만 아니라 오류 가능성도 높인다. 그러면 복잡성을 높이더라도 변경을 쉽게 수용할 수 있게 하는게 더 좋다.
+
+상속 대신 합성을 사용하면 더 유연한 설계가 된다.
+
+![img_5.png](img_5.png)
+
+이러면 2장에서 봤던 영화 예매 시스템의 구조가 된다.
+
+이러면 정책 바꾸는게 코드 레벨에서 가능해진다.
+
+```kotlin
+movie = Movie(
+    "반지의 제왕",
+    Duration.ofMinutes(180),
+    Money.wons(10000),
+    listOf(PeriodCondition(DayOfWeek.FRIDAY, LocalTime.of(14, 0), LocalTime.of(16, 0))
+    )
+)
+movie.changeDiscountPolicy(PercentDiscountPolicy(0.1))
+```
+
+#### 코드의 구조가 도메인의 구조에 대한 새로운 통찰력을 제공한다.
+
+![img_6.png](img_6.png)
+
+ 코드 구조가 바뀌면 도메인에 대한 관점도 바뀐다.
+ 
+할인 정책을 자유롭게 변경할 수 있다는 것은 도메인에 포함된 중요 요구사항인데, 
+이 요구 사항을 수용하기 위해 할인 정책이라는 개념을 코드에 명시적으로 드러냈다.
+
+그렇다면 도메인 모델 역시 코드 관점에 따라 바뀌어야 한다. 도메인 모델은 개념과 관계 뿐만 아니라 유연성도 반영한다.
+
+도메인 모델은 코드에 대한 가이드를 제공하고 코드의 변화와 함께 변화해야 한다.
 
