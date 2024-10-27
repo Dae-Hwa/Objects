@@ -489,3 +489,47 @@ movie.changeDiscountPolicy(PercentDiscountPolicy(0.1))
 응집도 높은 메소드는 변경 가능한 설계를 이끌어내는 기반이 됨
 
 메소드 응집도가 높아졌지만 클래스 응집도는 낮다. 적절한 위치로 옮겨줘야함
+
+### 객체를 자율적으로 만들자
+
+메서드가 사용하고 있는 데이터를 가진 객체로 이동시킨다
+
+가장 쉽게 아는 방법은 어떤 접근자를 사용하고 있는지 확인 하는 것
+
+```kotlin
+private fun isDiscountable(condition: DiscountCondition, screening: Screening): Boolean {
+     if (condition.type == DiscountConditionType.PERIOD) {
+         return isSatisfiedByPeriod(condition, screening)
+     }
+
+     return isSatisfiedBySequence(condition, screening)
+ }
+
+private fun isSatisfiedByPeriod(condition: DiscountCondition, screening: Screening): Boolean {
+   return condition.dayOfWeek == screening.whenScreened.dayOfWeek &&
+           condition.startTime >= screening.whenScreened.toLocalTime() &&
+           condition.endTime <= screening.whenScreened.toLocalTime()
+}
+
+private fun isSatisfiedBySequence(condition: DiscountCondition, screening: Screening): Boolean {
+   return condition.sequence == screening.sequence
+}
+```
+`isDiscountable` 은 condition 의 접근자 사용. 내부에서 사용하는 메서드들에서는 condition 과 screening 의 데이터 사용
+
+그러니 일단 `DiscountCondition` 으로 옮겨준다.
+
+[DiscountCondition.kt](v04/p2_%EA%B0%9D%EC%B2%B4%EB%A5%BC_%EC%9E%90%EC%9C%A8%EC%A0%81%EC%9C%BC%EB%A1%9C_%EB%A7%8C%EB%93%A4%EC%9E%90/DiscountCondition.kt)
+
+[ReservationAgency.kt](v04/p2_%EA%B0%9D%EC%B2%B4%EB%A5%BC_%EC%9E%90%EC%9C%A8%EC%A0%81%EC%9C%BC%EB%A1%9C_%EB%A7%8C%EB%93%A4%EC%9E%90/ReservationAgency.kt)
+
+이제 ReservationAgency 는 메소드를 통해서만 DiscountCondition 과 협력한다. 
+
+메소드 옮겨주니 결합도 낮아지고 응집도 높아진다. 캡슐화도 됐다.
+
+이렇게하니 책임주도 설계 처음할때의 모습과 비슷해졌다.
+
+여기에 다형성 패턴, 변경 보호 패턴 적용하면 최종 설계와 비슷해질 것
+
+책임 중심 설게에 익숙하지 않더라도 데이터 중심 구현을 리팩토링하면 비슷한 결과물을 얻을 수 있음
+
