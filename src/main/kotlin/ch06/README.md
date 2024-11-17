@@ -149,3 +149,71 @@ DDD에서는 이런 패턴을 의도를 드러내는 인터페이스(intention r
 
 ### 함께 모으기
 
+1장에서 만든 코드에 이런 원칙을 위반하는 코드가 나온다.
+
+#### 디미터 법칙을 위반하는 티켓 판매 도메인
+
+[Theater.kt](../ch01/v1/Theater.kt)
+
+enter 메소드에 있는 코드에 기차충돌이 나타난다
+
+`audience.bag.minusAmount(ticket.fee)`
+
+audience 내부의 bag에게 메세지 전송한다. 이러면 Theater는 Audience의 내부 구조에 결합된다.
+
+디미터 법칙을 위반하면 인터페이스와 구현의 분리 원칙을 위반하는 것
+
+이런 코드는 사용하기도 어렵다. 내부 구조까지 알아야 하니까
+
+```kotlin
+val ticket = ticketSeller.ticketOffice.getTicket()
+            audience.bag.setTicket(ticket)
+            ticketSeller.ticketOffice.plusAmount(ticket.fee)
+            audience.bag.minusAmount(ticket.fee)
+```
+
+위 코드에 따르면 Theater는 TicketSeller가 getTicketOffice 메세지를 수신할 수 있다는 사실, 
+
+그리고 내부에 TicketOffice가 있다는 사실, 
+
+반환된 TicketOffice가 getTicket 메세지를 수신할 수 있고 Ticket이 getFee 메세지를 수신할 수 있다는 사실을 알아야 한다.
+
+#### 묻지말고 시켜라
+
+원칙 준수하도록 리팩토링
+
+1. Ticket 내부 로직 TicketSeller로 이동 ([v02_1](v02_1))
+2. TicketSeller 내부 로직 Audience로 이동 ([v02_2](v02_2)) 
+3. Audience 내부 로직 Bag으로 이동[v02_3](v02_3)
+
+#### 인터페이스에 의도를 드러내자
+
+위에서 리팩토링한 메소드는 모드 setTicket이라는 메소드 명이다.
+
+이 메소드 명으로 어떤 의도인지 나타내지 못한다. 이름이 같은 각 메소드들의 의도가 다른 메소드들과 의도가 다르다
+
+개발자는 알고 있지만 인터페이스를 사용하는 개발자는 알기 어렵다.
+
+이런식으로 하면 의도가 명확해진다.
+
+```kotlin
+class TicketSeller {
+    fun sellTo(audience: Audience) { /* ... */ }
+}
+
+class Audience {
+    fun buy(ticket: Ticket) { /* ... */ }
+}
+
+class Bag {
+    fun hold(ticket: Ticket) { /* ... */ }
+}
+```
+
+오퍼레이션의 이름은 협력이라는 문맥을 반영해야 한다. 클라이언트가 객체에게 무엇을 원하는지 표현해야 한다.
+
+디미터 법칙은 캡슐화 위반 메세지가 인터페이스에 포함되지 않도록 도와준다.
+
+묻지않고 시켜라 원칙은 디미터 법칙을 준수하는 협력을 만들기 위한 스타일
+
+의도를 드러내는 인터페이스 원칙은 어떤 이름이 드러나야 하는지에 대한 가이드
