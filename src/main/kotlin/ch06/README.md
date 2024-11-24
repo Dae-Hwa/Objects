@@ -27,15 +27,16 @@
 ![img.png](img.png)
 
 협력의 관점에서 객체는 두 가지 메시지 집합으로 구성
+
 - 객체가 수신하는 메시지의 집합
 - 외부의 객체에게 전송하는 메시지의 집합
 
 ### 메시지와 메세지 전송
 
 - 메시지(message): 객체들이 협력하기 위해 사용할 수 있는 유일한 의사소통 수단
-  - 오퍼레이션 명(operation name)과 인자(argument)로 구성. (e.g. `isSatisfiedBy(screening)`)
+    - 오퍼레이션 명(operation name)과 인자(argument)로 구성. (e.g. `isSatisfiedBy(screening)`)
 - 메시지 전송(message sending) | 메시지 패싱(message passing): 한 객체가 다른 객체에게 도움을 요청
-  - 메시지에 메시지 수신자를 추가한 것 (e.g. `condition.isSatisfiedBy(screening)`)
+    - 메시지에 메시지 수신자를 추가한 것 (e.g. `condition.isSatisfiedBy(screening)`)
 - 메시지 전송자(message sender) | 클라이언트: 메시지를 전송하는 객체
 - 메시지 수신자(message receiver) | 서버: 메시지를 수신하는 객체
 
@@ -45,59 +46,62 @@
 
 메시지를 수신했을때 어떤 코드가 실행될지는 메시지 수신자의 실제 타입이 무엇인가에 따라 달라짐.
 
-객체는 메시지와 메서드라는 다른 개념을 런타임에 연결해야 함. 컴파일 시점과 실행 시점에 차이가 생김. 
+객체는 메시지와 메서드라는 다른 개념을 런타임에 연결해야 함. 컴파일 시점과 실행 시점에 차이가 생김.
 
-코드레벨에서는 뭐가 실행될지 정확히 알 수 없음. 
+코드레벨에서는 뭐가 실행될지 정확히 알 수 없음.
 
 메시지와 메서드가 구분되기 떄문에 메시지 전송자와 수신자가 느슨하게 결합됨. 결합도가 낮아져서 유연하고 확장가능한 코드 작성됨
 
 ### 퍼블릭 인터페이스와 오퍼레이션
 
 - 퍼블릭 인터페이스: 객체가 의사소통을 위해 외부에 공개하는 메시지의 집합
-  - 외부에서 볼때 객체의 안쪽은 블랙박스
+    - 외부에서 볼때 객체의 안쪽은 블랙박스
 - 오퍼레이션(operation): 퍼블릭 인터페이스에 포함된 메시지. 수행가능한 어떤 행동에 대한 추상화
-  - 오퍼레이션이라 부를때는 내부의 구현 코드는 제외하고 단순히 메시지와 관련된 시그니처를 가키는 경우가 대부분
-  - 실제로 실행되는 코드는 메서드라고 부름. 오퍼레이션이 여러 구현 중 하나
+    - 오퍼레이션이라 부를때는 내부의 구현 코드는 제외하고 단순히 메시지와 관련된 시그니처를 가키는 경우가 대부분
+    - 실제로 실행되는 코드는 메서드라고 부름. 오퍼레이션이 여러 구현 중 하나
 
 ![img_1.png](img_1.png)
 
-프로그래밍 언어 관점에서 객체가 다른 객체에게 메시지를 전송하면 
+프로그래밍 언어 관점에서 객체가 다른 객체에게 메시지를 전송하면
+
 1. 런타임 시스템은 메시지 전송을 오퍼레이션 호출로 해석
 2. 메시지를 수신한 객체의 실제 타입을 기반으로 적절한 메서드를 찾아 실행
-따라서 퍼블릭 인터페이스 메시지의 관점에서 보면 메서드 호출 보다는 오퍼레이션 호출이 더 적절함
+   따라서 퍼블릭 인터페이스 메시지의 관점에서 보면 메서드 호출 보다는 오퍼레이션 호출이 더 적절함
 
 ### 시그니처
 
 - 시그니처(signature): 오퍼레이션 또는 메소드의 이름과 파라미터 목록을 합친 것.
-  - 오퍼레이션은 실행코드 없이 시그니처만을 정의한 것
-  - 메서드는 이 시그니처에 구현을 더한 것
-  - 메시지를 수신하면 일반적으로 시그니처와 동일한 메소드가 실행됨
+    - 오퍼레이션은 실행코드 없이 시그니처만을 정의한 것
+    - 메서드는 이 시그니처에 구현을 더한 것
+    - 메시지를 수신하면 일반적으로 시그니처와 동일한 메소드가 실행됨
 
 오퍼레이션 관점에서 다형성이란 동일한 오퍼레이션 호출에 대해 서로 다른 메서드들이 실행되는 것
 
 ## v02. 인터페이스와 설계 품질
 
 인터페이스 품질에 영향 미치는 원칙과 기법
+
 - 디미터 법칙
 - 묻지말고 시켜라
 - 의도를 드러내는 인터페이스
 - 명령-쿼리 분리
 
 ### 디미터 법칙
+
 - 객체의 내부구조에 강하게 결합되지 않도록 협력 경로 제한(점을 하나만 찍자?!)
 - 모든 클래스 C와 C에 구현된 모든 메소드 M에 대해서 M이 메시지를 전송할수 있는 모든 객체는
-  - M의 인자로 전달된 클래스(C 자체를 포함)
-  - C의 인스턴스 변수의 클래스
+    - M의 인자로 전달된 클래스(C 자체를 포함)
+    - C의 인스턴스 변수의 클래스
 - 아래 조건을 만족하면 됨
-  - this 객체
-  - 메서드의 매개변수
-  - this의 속성
-  - this의 속성인 컬렉션의 요소
-  - 메서드 내에서 생성된 지역 객체
+    - this 객체
+    - 메서드의 매개변수
+    - this의 속성
+    - this의 속성인 컬렉션의 요소
+    - 메서드 내에서 생성된 지역 객체
 - 부끄럼 타는 코드(shy code) - 불필요한 것들은 다른 객체에 보여주지 않고, 다른 객체의 구현에 의존하지 않는다
 - 디미터법칙은 캡슐화를 다른 관점에서 표현한 것
 - 내부 구조에 대해 물어보고 변환받은 요소에 대해 연쇄적으로 메세지 전송하게 되면 기차 충돌(train wreck)이 발생한 것
-  - 이러면 클래스 내부 구현이 외부로 노출되고 캡슐화 무너지고 메세지 전송자가 수신자의 내부 구조에 강하게 결합됨
+    - 이러면 클래스 내부 구현이 외부로 노출되고 캡슐화 무너지고 메세지 전송자가 수신자의 내부 구조에 강하게 결합됨
 
 ### 묻지말고 시켜라
 
@@ -109,35 +113,41 @@
 인터페이스 이름에 의도를 나타내면 좋지 않다
 
 예를 들어,
+
 ```kotlin
 class PeriodCondition {
-    fun isSatisfiedByPeriod(screening: Screening): Boolean { /* ... */ }
+    fun isSatisfiedByPeriod(screening: Screening): Boolean { /* ... */
+    }
 }
 
 class SequenceCondition {
-  fun isSatisfiedBySequence(screening: Screening): Boolean { /* ... */ }
+    fun isSatisfiedBySequence(screening: Screening): Boolean { /* ... */
+    }
 }
 ```
 
 이런 스타일이 좋지 않은 이유
+
 - 메서드에 대해 제대로 커뮤니케이션하지 못 함.
-  - 클라이언트 관점에서는 둘 다 할인 조건을 판단하는 동일한 작업
-  - 메서드 이름이 다르니 내부 구현을 모르면 동일한 작업을 하는지 알 수 없음 
+    - 클라이언트 관점에서는 둘 다 할인 조건을 판단하는 동일한 작업
+    - 메서드 이름이 다르니 내부 구현을 모르면 동일한 작업을 하는지 알 수 없음
 - 메서드 수준에서 캡슐화 위반
-  - 이렇게 구현하면 협력 하는 객체의 종류를 알도록 강요함
-  - 그러면 방법이 바뀔때 이름도 변경되어야 하는데, 클라이언트 코드도 함께 변경되어야 함 -> 변경에 취약해진다.
+    - 이렇게 구현하면 협력 하는 객체의 종류를 알도록 강요함
+    - 그러면 방법이 바뀔때 이름도 변경되어야 하는데, 클라이언트 코드도 함께 변경되어야 함 -> 변경에 취약해진다.
 
 메서드 이름은 어떻게가 아니라 무엇을 하는지 드러내야함.
 
 이 기준으로 메소드를 만들면
 
 ```kotlin
-class PeriodCondition: DiscountCondition {
-    override fun isSatisfiedBy(screening: Screening): Boolean { /* ... */ }
+class PeriodCondition : DiscountCondition {
+    override fun isSatisfiedBy(screening: Screening): Boolean { /* ... */
+    }
 }
 
-class SequenceCondition: DiscountCondition {
-  override fun isSatisfiedBy(screening: Screening): Boolean { /* ... */ }
+class SequenceCondition : DiscountCondition {
+    override fun isSatisfiedBy(screening: Screening): Boolean { /* ... */
+    }
 }
 ```
 
@@ -167,14 +177,14 @@ audience 내부의 bag에게 메세지 전송한다. 이러면 Theater는 Audien
 
 ```kotlin
 val ticket = ticketSeller.ticketOffice.getTicket()
-            audience.bag.setTicket(ticket)
-            ticketSeller.ticketOffice.plusAmount(ticket.fee)
-            audience.bag.minusAmount(ticket.fee)
+audience.bag.setTicket(ticket)
+ticketSeller.ticketOffice.plusAmount(ticket.fee)
+audience.bag.minusAmount(ticket.fee)
 ```
 
-위 코드에 따르면 Theater는 TicketSeller가 getTicketOffice 메세지를 수신할 수 있다는 사실, 
+위 코드에 따르면 Theater는 TicketSeller가 getTicketOffice 메세지를 수신할 수 있다는 사실,
 
-그리고 내부에 TicketOffice가 있다는 사실, 
+그리고 내부에 TicketOffice가 있다는 사실,
 
 반환된 TicketOffice가 getTicket 메세지를 수신할 수 있고 Ticket이 getFee 메세지를 수신할 수 있다는 사실을 알아야 한다.
 
@@ -183,7 +193,7 @@ val ticket = ticketSeller.ticketOffice.getTicket()
 원칙 준수하도록 리팩토링
 
 1. Ticket 내부 로직 TicketSeller로 이동 ([v02_1](v02_1))
-2. TicketSeller 내부 로직 Audience로 이동 ([v02_2](v02_2)) 
+2. TicketSeller 내부 로직 Audience로 이동 ([v02_2](v02_2))
 3. Audience 내부 로직 Bag으로 이동[v02_3](v02_3)
 
 #### 인터페이스에 의도를 드러내자
@@ -198,15 +208,18 @@ val ticket = ticketSeller.ticketOffice.getTicket()
 
 ```kotlin
 class TicketSeller {
-    fun sellTo(audience: Audience) { /* ... */ }
+    fun sellTo(audience: Audience) { /* ... */
+    }
 }
 
 class Audience {
-    fun buy(ticket: Ticket) { /* ... */ }
+    fun buy(ticket: Ticket) { /* ... */
+    }
 }
 
 class Bag {
-    fun hold(ticket: Ticket) { /* ... */ }
+    fun hold(ticket: Ticket) { /* ... */
+    }
 }
 ```
 
@@ -217,3 +230,54 @@ class Bag {
 묻지않고 시켜라 원칙은 디미터 법칙을 준수하는 협력을 만들기 위한 스타일
 
 의도를 드러내는 인터페이스 원칙은 어떤 이름이 드러나야 하는지에 대한 가이드
+
+## v03. 원칙의 함정
+
+설계원칙이 절대적인 법칙은 아니다. 원칙에는 예외가 있다.
+
+### 디미터 법칙은 하나의 도트(.)를 강제하는 규칙이 아니다
+
+디미터 법칙을 하나의 도트만 사용하라고 요약하는데, 기차 충돌처럼 보이더라도 객체의 내부 구현에 대한 어떤 정보도 외부로 노출하지 않는다면 상관없다.
+
+`IntStream.of(1, 2, 3, 10, 111, 13).filter(x -> x > 10).distinct().count()`
+
+위 코드는 IntStream의 인스턴스를 또 다른 IntStream의 인스턴스로 변환하는 것이다. 이런 경우 내부구조가 노출되지 않는다.
+
+### 결합도와 응집도의 충돌
+
+디미터 법칙과 묻지말고 시켜라 원칙을 맹목적으로 준수하면 응집도가 낮아질 수 있다. 변경 원인이 달라질 수 있기 떄문에
+
+```kotlin
+class PeriodCondition : DiscountCondition {
+    override fun isSatisfiedBy(screening: Screening): Boolean {
+        return screening.startTime.dayOfWeek == dayOfWeek &&
+                startTime >= screening.startTime.toLocalTime() &&
+                endTime <= screening.startTime.toLocalTime()
+    }
+}
+```
+
+얼핏 보면 Screening의 내부 상태를 가져오니 캡슐화를 위반한 것 처럼 보인다.
+
+```kotlin
+class Screening {
+    fun isDiscountable(dayOfWeek: DayOfWeek, startTime: LocalTime, endTime: LocalTime): Boolean {
+        return this.startTime.dayOfWeek == dayOfWeek &&
+                startTime <= whenScreened.toLocalTime() &&
+                endTime >= whenScreened.toLocalTime()
+    }
+}
+
+class PeriodCondition : DiscountCondition {
+    override fun isSatisfiedBy(screening: Screening): Boolean {
+        return screening.isDiscountable(dayOfWeek, startTime, endTime)
+    }
+}
+```
+
+이렇게 하면 Screening이 기간에 따른 할인 조건을 판단하는 책임을 갖게 된다. 이건 Screening이 담당해야 할 책임이 아니다.
+
+Screening의 본질적은 책임은 영화를 예매하는 것. 변경할 이유가 두 개가 된다. 이러면 응집도가 낮아진다.
+
+
+
