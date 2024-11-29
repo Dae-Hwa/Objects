@@ -279,5 +279,97 @@ class PeriodCondition : DiscountCondition {
 
 Screening의 본질적은 책임은 영화를 예매하는 것. 변경할 이유가 두 개가 된다. 이러면 응집도가 낮아진다.
 
+예외적인 경우로 묻지 않으면 방법이 없는 경우도 있다.
 
+```kotlin
+for (movie in movies) {
+    total += movie.fee
+}
+```
 
+물으려는 객체가 정말로 데이터인 경우도 있다. 만약 객체가 아니라 자료 구조라면 당연히 외부에 내부를 노출해야 한다.
+
+## v04. 명령-쿼리 분리 원칙
+
+필요에 따라 물어야 한다. 이럴땐 명령-쿼리 분리(Commend-Query Separation, CQS) 원칙을 생각해보면 된다. 
+
+퍼블릭 인퍼테이스의 오퍼레이션 정의에 도움이 된다.
+
+절차를 묶어 호출 가능하도록 이름을 부여한 기능 모듈을 루틴(rooutine)이라고 부른다.
+
+루틴은 프로시저(procedure)와 함수(function)로 구분된다.
+
+- 프로시저 -> 명령(command): 객체 상태 변경
+  - 정해진 절차에 따라 내부의 상태를 변경하는 루틴
+  - 부수효과 발생
+- 함수 -> 쿼리(query): 객체 정보 반환
+  - 필요한 값을 계산해서 반환하는 루틴
+  - 부수효과 발생하면 안 됨
+
+명령-쿼리 분리 원칙을 한 문장으로 표현하면 질문이 답변을 수정해서는 안 된다는 것
+
+기계 메타포 
+- 객체는 블랙박스
+- 인터페이스는 디스플레이와 버튼의 집합
+- 명령 버튼을 누르면 기계의 상태 변경
+- 쿼리 버튼을 누르면 상태 확인
+
+### 반복 일정의 명령과 쿼리 분리하기
+
+- 이벤트: 특정 일자에 실제로 발생하는 사건
+- 반복일정: 일주일 단위로 돌아오는 특정 시간 간격에 발생하는 사건 전체를 포괄적으로 지칭하는 용어
+  - 반복일정을 만족하는 특정 일자와 시간에 발생하는 사건이 이벤트
+
+```kotlin
+class Event(
+    private val subject: String,
+    private var from: LocalDateTime,
+    private var duration: Duration
+) {
+    fun isSatisfied(schedule: RecurringSchedule): Boolean {
+        if (from.dayOfWeek != schedule.dayOfWeek ||
+            from.toLocalTime() != schedule.from ||
+            duration != schedule.duration
+        ) {
+            reschedule(schedule)
+            return false
+        }
+        return true
+    }
+  
+    private fun reschedule(schedule: RecurringSchedule) {
+        from = LocalDateTime.of(
+            from.toLocalDate().plusDays(daysDistance(schedule)),
+            schedule.from
+        )
+        duration = schedule.duration
+    }
+}
+
+class RecurringSchedule(
+    private val subject: String,
+    val dayOfWeek: DayOfWeek,
+    val from: LocalTime,
+    val duration: Duration
+)
+```
+
+발생했던 버그
+- `isSatisfied(RecurringSchedule)`: 해당 이벤트가 일정 조건을 만족하면 true, 아니면 false 반환
+
+```kotlin
+val schedule = RecurringSchedule("회의", DayOfWeek.WEDNESDAY, LocalTime.of(10, 30), Duration.ofMinutes(30))
+val meeting = Event("회의", LocalDateTime.of(2019, 5, 9, 10, 30), Duration.ofMinutes(30))
+
+assert(meeting.isSatisfied(schedule)) == false
+assert(meeting.isSatisfied(schedule)) == true
+```
+isSatisfied 를 할 때마다 상태가 바뀐다.
+
+문제는 스케줄 조건을 만족하지 못할 경우 Event의 상태를 변경한다는 것이다.
+
+명령과 쿼리의 두 가지 역할을 동시에 수행하고 있었기 떄문에 버그를 찾기 어려웠는데 isSatisfied가 부수효과를 가질 것이라고 예상하기 힘들기 때문이다.
+
+처음에는 없었지만 요구사항 변화에 따라 event 상태 수정이 필요했는데, isSatisfied 안에 해당 코드를 넣어놓은것이다.
+
+쿼리처럼 보이지만 부수효과를 가지는 코드는 이해하기 어렵고 잘못 사용하기 쉬우며, 버그를 양산하는 경향이 있다.
